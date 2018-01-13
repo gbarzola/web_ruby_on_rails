@@ -1,28 +1,745 @@
-== README
-
-This README would normally document whatever steps are necessary to get the
-application up and running.
-
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+== Introducción
 
 
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+Este tutorial tiene por objetivos:
+
+
+Aprender a crear proyectos en Ruby on Rails.
+Integrar los estilos del framework Bootstrap al proyecto.
+Crear controladoras y vistas.
+Crear partials.
+Implementar el soporte para múltiples layouts.
+
+Asumimos que estamos trabajando en un Workspace de Cloud9 y que contamos con una carpeta Development dentro de la carpeta workspace. Sin embargo, aplicando las rutas que correspondan según el caso, los pasos son similares en otro entorno de trabajo basado en unix/linux. Si deseamos trabajar en un entorno con Windows que cuente con mysql y Ruby on Rails, las instrucciones de Ruby on Rails son las mismas, pero hay que ver equivalencias para comandos del OS e instrucciones para iniciar el servicio de MySQL.
+
+
+A través de los siguientes pasos, crearemos una aplicación en Ruby on Rails que represente el sitio de Wok & Wine, una cadena internacional de restaurantes.
+
+
+¡Momento de desarrollar!
+
+
+Creando la carpeta de trabajo
+
+
+Ubicados en la consola del OS ejecutamos
+
+
+# mkdir Development
+
+# cd Development
+
+
+Creando el proyecto
+
+
+Creamos un nuevo proyecto en RoR con el nombre restapp-sprint1:
+
+
+# rails new restapp-sprint1 -d mysql
+
+
+Este proyecto representa la primera versión de nuestra aplicación.
+
+
+Especificando Gemas a utilizar
+
+
+Nos ubicamos en la carpeta del proyecto.
+
+
+# cd restapp-sprint1
+
+
+Abrimos para edición el archivo Gemfile. Modificamos la línea de código:
+
+
+gem 'mysql2’
+
+
+De tal forma que se aprecie de la siguiente manera:
+
+
+gem 'mysql2', '~> 0.3.20'
+
+
+Al final del archivo Gemfile adicionamos las siguientes líneas:
+
+
+gem 'therubyracer'
+
+gem 'less-rails'
+
+gem 'twitter-bootstrap-rails'
+
+
+
+
+Guardamos el archivo Gemfile.
+
+
+Iniciando MySQL y creando la BD del proyecto
+
+
+Como siguiente paso, crearemos la base de datos del proyecto.
+
+
+# sudo service mysql start
+
+# rake db:create
+
+
+
+
+Este proceso crea dos bases de datos en MySQL, una con el nombre restapp-sprint1_development y otra con el nombre restapp-sprint1_test. Al ejecutar la aplicación, ésta se ubica por defecto en development mode, utilizando la base de datos restapp-sprint1_development.
+
+
+Instalando y configurando las gemas
+
+
+Ejecutamos en la consola el siguiente comando:
+
+
+# bundle
+
+
+A continuación ejecutamos el siguiente comando para la configuración inicial de Bootstrap en nuestro proyecto:
+
+
+# rails g bootstrap:install less
+
+
+Luego de esto, ejecutamos el siguiente comando para aplicar los estilos de Bootstrap al template por defecto del proyecto, el cual se conoce como el application layout:
+
+
+# rails g bootstrap:layout application
+
+
+Generando el controller y views para vistas estáticas
+
+
+Vamos a  adicionar a nuestro proyecto una vista index, una para la sección About Us, otra para Frequently Asked Questions (FAQ), una sección para Terms of Service (TOS) y finalmente, una vista para Contact Us. Para ello, en la consola y ubicados en la carpeta raíz del proyecto, escribimos el siguente comando:
+
+
+# rails g controller pages index about_us faq tos contact_us
+
+Comprobamos que se genera una carpeta app/views/pages con los archivos index.html.erb, about_us.html.erb, faq.html.erb, tos.html.erb y contact_us.html.erb. Adicionalmente se crea entre otros, el archivo app/controllers/pages_controller.erb que contendrá la clase PagesController.
+
+Estableciendo la ruta raíz para el proyecto
+
+
+Modificamos el archivo config/routes.rb. En él reemplazamos la línea:
+
+
+get 'home/index'
+
+
+por:
+
+
+root 'home#index'
+
+
+Con esto indicamos al routing process de la aplicación, que cuando llegue un request con la ruta raíz de la aplicación (/), dicho request será procesado por el controller home y por su action con el nombre index. Guardamos el archivo para preservar los cambios.
+
+
+Luego en la consola ejecutamos el comando:
+
+
+# rake routes
+
+
+Observaremos que se presenta una ruta root, junto con rutas para las vistas creadas las cuales inician con pages_.
+
+
+Creando un partial para evitar redundancia de código en el Application layout
+
+
+En la carpeta raíz del proyecto, ubicados en la consola de comandos, escribimos la siguiente instrucción:
+
+
+# touch app/views/layouts/_menu.html.erb
+
+
+Este comando crea el partial 'layouts/menu'. Procedemos a abrir éste archivo para edición, agregando las siguientes líneas:
+
+
+<li><%= link_to "About us", pages_about_us_path  %></li>
+
+<li><%= link_to "FAQ", pages_faq_path  %></li>
+
+<li><%= link_to "Terms of Service", pages_tos_path  %></li>
+
+<li><%= link_to "Contact us", pages_contact_us_path  %></li>
+
+
+A continuación abrimos para edición el archivo app/views/layouts/application.html.erb.
+
+
+En este archivo, ubicamos las líneas <li></li>  correspondientes a las opciones de menú y las de sidebar. Observaremos que las opciones del navigation bar y las opciones del sidebar son exáctamente las mismas, por lo que se presenta una oportunidad para aplicar el concepto de partial para evitar esa redundancia de código.
+
+En ambos casos eliminamos las líneas <li></li> que corresponden a las opciones del navigation bar y del sidebar escribiendo en su reemplazo el comando:
+
+
+<%= render ‘layouts/menu’ %>
+
+
+Luego de ello, el bloque de código de ambas secciones de menú se apreciará de la siguiente forma:
+
+
+    <div class="navbar navbar-default navbar-static-top">
+
+      <div class="container">
+
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+
+          <span class="icon-bar"></span>
+
+          <span class="icon-bar"></span>
+
+          <span class="icon-bar"></span>
+
+        </button>
+
+        <a class="navbar-brand" href=<%= root_path %>>Wok & Wine</a>
+
+        <div class="navbar-collapse collapse navbar-responsive-collapse">
+
+          <ul class="nav navbar-nav">
+
+            <%= render 'layouts/menu' %>
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="container">
+
+      <div class="row">
+
+        <div class="col-lg-9">
+
+          <%= bootstrap_flash %>
+
+          <%= yield %>
+
+        </div>
+
+        <div class="col-lg-3">
+
+          <div class="well sidebar-nav">
+
+            <h3>Sidebar</h3>
+
+            <ul class="nav nav-list">
+
+              <li class="nav-header">Sidebar</li>
+
+              <%= render 'layouts/menu' %>
+
+            </ul>
+
+          </div><!--/.well -->
+
+        </div><!--/span-->
+
+      </div><!--/row-->
+
+
+
+
+Guardamos el archivo application.html.erb.
+
+
+Adicionando un layout para las vistas internas
+
+
+A continuación, vamos a modificar la experiencia de tal forma que las vistas internas (about_us, faq, tos, contact_us) tengan un layout distinto del layout por defecto. Para ello iniciamos el ejecutando el siguiente comando en la consola:
+
+
+# cp app/views/layouts/application.html.erb app/views/layouts/internal.html.erb
+
+
+Con esto hemos creado un nuevo layout con el nombre internal, hasta ahora con el mismo contenido que application layout. Abrimos el archivo internal.html.erb para edición. Ubicamos la siguiente línea de código:
+
+
+<%= yield %>
+
+
+Sobre dicha línea adicionamos el siguiente bloque de código:
+
+
+ <div class="page-header">
+
+    <h1><%= yield :header_title %> <small><%= yield :header_sub_title %></small></h1>
+
+ </div>
+
+
+
+
+Esto permitirá contar con un encabezado que contenga título y subtítulo como zonas variables, además de aplicar el estilo page-header de Bootstrap. Guardamos el archivo internal.html.erb.
+
+
+Nos corresponde ahora indicar al controller que aplique el layout para las vistas internas (about_us, faq, tos, contact_us). Para ello, abrimos para edición el archivo app/controllers/pages_controller.rb.
+
+
+Debajo de la instrucción 'class' adicionamos la siguiente línea antes de la declaración de los métodos.
+
+
+layout 'internal', except: [:index]
+
+
+De esta forma el código de pages_controller.rb se apreciará de la siguiente manera:
+
+
+class PagesController < ApplicationController
+
+  layout 'internal', except: [:index]
+
+  def index
+
+  end
+
+  def about_us
+
+  end
+
+  def faq
+
+  end
+
+  def tos
+
+  end
+
+  def contact_us
+
+  end
+
+end
+
+
+
+
+Guardamos el archivo pages_controller.rb.
+
+
+En lo siguientes pasos modificaremos las vistas internas.
+
+
+Modificando 'About us'
+
+
+Abrimos para edición el archivo app/views/pages/about_us.html.
+
+
+Reemplazamos el código por defecto con el siguiente bloque de instrucciones:
+
+
+<%= content_for :header_title do %>
+
+    About us 
+
+<% end %>
+
+<%= content_for :header_sub_title do %>
+
+    Who we are 
+
+<% end %>
+
+<h2>Our history</h2>
+
+<p>Opened in 1999, Restaurant Wok & Wine is a casual fine dining restaurant, offering eclectic American cuisine and warm hospitality in a rustic historically preserved building. A high, open beam ceiling, exposed brick and concrete floors display the original space, while an open kitchen, banquette seating and gentle lighting contribute to an intimate and contemporary feel.</p>
+
+<p>We specialize in three course tasting menus, allowing the customer to select any three dishes from the menu for $55 per person. A la Carte dining is also available.</p>
+
+<p>Our food is sourced from top quality seasonal ingredients, featuring a high percentage of local and organic products. Our menu changes every six to eight weeks, offering a mix of new and signature dishes. We consider Wok & Wine to be a truly “American” restaurant honoring many different cooking traditions and interpreting them with our unique creative vision.</p>
+
+<p>Inspired by great artisanal foods of the world. We craft all of our stocks, sauces, breads, pastries and ice creams from scratch on a daily basis. We also strive to support other artisanal producers when purchasing wine, cheese, honey and many other ingredients.</p>
+
+<p>Our approach towards the operation of the restaurant is truly cooperative. We believe that every single member of our staff is integral to our success and pay sustainable living wages to all employees, offering medical benefits and profit sharing to all full time employees.</p>
+
+<h2>Who lead us</h2>
+
+<p>Our current leaders of kitchen and service at Wok & Wine:</p>
+
+<ul>
+
+<li>Alexander Roberts – Executive Chef / CEO / Proprietor</li>
+
+<li>Mike Berger / General Manager</li>
+
+<li>Lucas Rosenbrook– Chef / Kitchen Manager</li>
+
+<li>James Hirdler – Service Supervisor / Wine Director</li>
+
+<li>Hannah Drehmann – Event Coordinator</li>
+
+<li>Carrie Riggs – Pastry Chef</li>
+
+</ul>
+
+<h2>Alexander Roberts</h2>
+
+<p>Alexander Roberts was born in Buffalo, New York, but his formative years were spent here in Minneapolis. He started working in local kitchens in high school and through college.  In the early 1990’s, Alex moved to New York City, where he attended the French Culinary Institute.  After graduation, Alex gained experience in several renowned New York restaurants, including Gramercy Tavern, Bouley, and the Union Square Cafe.</p>
+
+<p>Alex returned to Minneapolis and opened Restaurant Wok & Wine in 1999. He has been able to advance his commitment to organic, sustainably produced food at Wok & Wine and has received numerous accolades in the process.</p>
+
+<p>Alex opened Brasa Premium Rotisserie in 2007, also committed to organic, sustainably produced food. For more details about Brasa please call 612-379-3030 or visit their website at www.brasa.us.</p>
+
+
+Guardamos el archivo about_us.html.erb.
+
+
+Modificando 'FAQ'
+
+
+Abrimos para edición el archivo faq.html.erb y reemplazamos el código existente por lo siguiente:
+
+
+<%= content_for :header_title do %>
+
+    Frequently Asked Questions 
+
+<% end %>
+
+<%= content_for :header_sub_title do %>
+
+    Your doubts, clarified 
+
+<% end %>
+
+<p><strong>What hours are the Restaurant open for dining?</strong></p>
+
+<p>Lunch Hours: Monday through Friday | 11:30am to 2:00pm, and Dinner Hours: Tuesday through Saturday | 5:30pm to 9:00pm. Our Restaurant lounge is always open during our dining hours.</p>
+
+<p><strong>Do you have to be a member to dine at Wok & Wine ?</strong></p>
+
+<p>We welcome non-members to try the restaurant for lunch or dinner on a one time basis, but we do require membership for continuous usage and always give priority seating to our members.</p>
+
+<p><strong>Do Wok & Wine members get a discount?</strong></p>
+
+<p>Yes, all Wok & Wine members receive a 10% discount on food and beverage purchases in the restaurant.</p>
+
+<p><strong>Are there any blackout dates for the restaurant?</strong></p>
+
+<p>Our online calendar (click here) is always kept up to date with the latest sold out dates and times. The restaurant is typically closed the week after the October and May races for post-race clean up. Wok & Wine is not open on Sundays except for special occasions.</p>
+
+<p><strong>Should I make a reservation?</strong></p>
+
+<p>Yes, we recommend making a reservation in order to give you the best possible service and ensure that we have your desired time available. We do accept walk-ins unless we are sold out for a private function.</p>
+
+<p><strong>What is the easiest way to make reservations?</strong></p>
+
+<p>To make a reservation, please call the main restaurant line at 704-455-3216. You can also click here to make an online reservation request.</p>
+
+<p><strong>What is the dress code for the restaurant?</strong></p>
+
+<p>Find details about our dress code by clicking here.</p>
+
+<p><strong>Will Wok & Wine do anything special for a birthday or anniversary?</strong></p>
+
+<p>Wok & Wine members can receive a complimentary 6-inch white cake for a birthday or anniversary when they make a dinner reservation. A minimum 48-hour notice is required. Depending on availability, a balloon bouquet can also be placed at the guest's table. Cakes can also be pre-ordered for a fee determined by the size and type of cake requested.</p>
+
+<p><strong>Can a non-member make a dining reservation during race?</strong></p>
+
+<p>Non-members can only make a reservation during ticketed events if they are a guest of a member or have a ticket in Wok & Wine Convention Center. Event tickets are required by all in order to dine in the restaurant during the event.</p>
+
+
+Guardamos el archivo faq.html.erb.
+
+
+Modificando 'TOS'
+
+
+Abrimos para edición el archivo tos.html.erb y reemplazamos el código por defecto con este conjunto de sentencias:
+
+
+<%= content_for :header_title do %>
+
+    Terms of Service
+
+<% end %>
+
+<%= content_for :header_sub_title do %>
+
+    Important information about our offer 
+
+<% end %>
+
+<p>This website is owned by Alex's Place. You may contact Alex's Place via our contact form or call us at 585-344-2999.</p>
+
+<p>The alexsribs.com website is hosted by Alternative Aspect.</p>
+
+<p>Your use of this website is governed by these Terms and Conditions. Please take a few minutes to review these Terms and Conditions. Your use of this website constitutes your agreement to follow these rules and to be bound by them. If you do not agree with any of these Terms and Conditions, do not use the alexsribs.com website.</p>
+
+<p>These Terms and Conditions may change</p>
+
+<p>Alex's Place reserves the right to update or modify these Terms and Conditions at any time without prior notice. Your use of this website following any such change constitutes your agreement to follow and be bound by the Terms and Conditions as changed. For this reason, we encourage you to review these Terms and Conditions whenever you use this website.</p>
+
+<h2>Copyright Notice</h2>
+
+<p>All of the Content you see and hear on alexsribs.com, including, for example, all of the page headers, images, illustrations, graphics, audio clips, video clips and text, are subject to trademark, service mark, trade dress, copyright and/or other intellectual property rights or licenses held by Alex's Place, one of its affiliates or by third parties who have licensed their materials to Alex's Place. The entire content of this website is copyrighted as a collective work under U.S. copyright laws.</p>
+
+<p>The Content of this website, and the site as a whole, is intended solely for personal, noncommercial use by the users of oursite. You may download, print and store selected portions of the content, provided you (1) only use these copies of the content for your own personal, non commercial use, (2) do not copy or post the content on any network computer or broadcast the content in any media, and (3) do not modify or alter the content in any way, or delete or change any copyright or trademark notice.</p>
+
+<p>No right, title or interest in any downloaded materials is transferred to you as a result of any such downloading. Alex's Place reserves complete title and full intellectual property rights in any content you download from this website.</p>
+
+<p>Except as noted above, you may not copy, download, reproduce, modify, publish, distribute, transmit, transfer or create derivative works from the content without first obtaining written permission from Alex's Place.</p>
+
+<h2>Submissions</h2>
+
+<p>We welcome your comments regarding this website. However, any comments, feedback, notes, messages, ideas, suggestions or other communications (collectively, "comments") sent to Alex's Place shall be and remain the exclusive property of Alex's Place. Your submission of any such comments shall constitute an assignment to Alex's Place of all worldwide rights, titles and interests in all copyrights and other intellectual property rights in the comments. Alex's Place will be entitled to use, reproduce, disclose, publish and distribute any material you submit for any purpose whatsoever, without restriction and without compensating you in any way. For this reason, we ask that you not send us any comments that you do not wish to assign to us, including any confidential information or any original creative materials such as stories, product ideas, computer code or original artwork.</p>
+
+<p>User Submitted Content including, but not limited to, text, photos, or video submitted in connection with Gift, E-Cards, E-Vites, Forward-to-a-Friend messages or any other messaging service.</p>
+
+<p>The Alex's Place message services available to our guests are subject to the following guidelines. Out of respect for all of our guests, we ask that you do not use obscene, profane or threatening language in messages. In addition, we ask that you do not submit or post photos, videos or other media that include obscene, profane or threatening images. Examples of the kinds of conduct or content that are prohibited in user submitted content include:</p>
+
+<ul>
+
+<li>The transmission of any content that could violate, or could facilitate the violation of, any applicable law.</li>
+
+<li>The transmission of any content that is profane, libelous, defamatory, obscene, pornographic, indecent, lewd, harassing, threatening, harmful, invasive of privacy or publicity rights, abusive, inflammatory or otherwise objectionable.</li>
+
+<li>The impersonation of any person or entity in any part of a gift message.</li>
+
+</ul>
+
+<p>You are solely responsible for the content of any messages and/or images you submit and Alex's Place assumes no liability for any content submitted by you. We may, but are not obligated to, restrict or remove any and all content from a message that we determine in our sole discretion violates these guidelines or is otherwise harmful to us, or any third party. Alex's Place reserves the right to purge the content you provide after 90 days of creation. Any content you submit is for non-commercial use only. You must provide your actual e-mail address in order to send your content.</p>
+
+<p>Any content you submit will be routed through the Internet and you understand and acknowledge that you have no expectation of privacy with regard to any content you submit.</p>
+
+<h2>Discounts; Limitations on Quantity</h2>
+
+<p>We do offer additional discounts on large orders of a single item. Please inquire directly. We reserve the right to limit quantities.</p>
+
+<h2>Return Policy</h2>
+
+<p>If you are not fully satisfied with your purchase you may return it with the original packing receipt within 30 days of the order date. Additional restrictions apply.</p>
+
+<p>Gift Certificates returned to Alex's Place shall be in like new condition and unopened. The refund will be issued once Alex's Place confirms that the gift certificate is in the same condition that you received it and processes the return through Alex's Place's system.</p>
+
+<p>For gift certificates returned within 30 days, Alex's Place will reimburse the cost of the gift certificate, and the cost of initial shipping. Alex's Place will not reimburse the cost of shipping to return the gift certificate to Alex's Place.</p>
+
+<p>If your return is shipped after the timeframe indicated above or without a packing slip, we regret that we cannot issue a refund or send the merchandise back to you.</p>
+
+<p>The risk of loss and title to items pass to the purchaser upon delivery.</p>
+
+<h2>Disclaimers general</h2>
+
+<p>Alex's place reserves the right to refuse any sale.</p>
+
+<p>The alexsribs.com website is operated by Alex's Place on an "as is", "as available" basis, without representations or warranties of any kind. To the full extent permitted by law, Alex's Place disclaims any and all representations and warranties with respect to this site and its contents, whether express, implied, or statutory.</p>
+
+<p>Without limiting the foregoing, Alex's Place does not represent or warrant that the information on this website is accurate, complete, reliable, useful, timely or current or that this website will operate without interruption or error.</p>
+
+<p>Alex's Place does not endorse nor make any warranties or representations about the options or other service or data you may access, download or use as a result of the use of the information contained on this website, or about any website you may access through this website. Links to other sites are provided for convenience only. You need to make your own decisions regarding your interactions or communications with any other website.</p>
+
+<p>Alex's Place makes no representation that content provided on this website is applicable or appropriate for use in locations outside of the United States.</p>
+
+<p>Alex's Place assumes no risk or responsibility for your use of any of the content provided on this website.</p>
+
+<h2>Limitation of Liability</h2>
+
+<p>Under no circumstances, shall Alex's Place or any of their employees, directors, officers, agents, vendors or suppliers be liable for any direct or indirect losses or damages arising out of or in connection with the use of or inability to use this website.</p>
+
+<p>This is a comprehensive Limitation of Liability that applies to all losses and damages of any kind (whether general, special, consequential, incidental, exemplary or otherwise, including, without limitation, loss of data, income or profits), whether in contract, negligence or other tortious action, even if an authorized representative of alex's place has been advised of or should have known of the possibility of such damages.</p>
+
+<p>If you are dissatisfied with this website or any content on the site, or with these terms and conditions, your sole and exclusive remedy is to discontinue using this website. You acknowledge, by your use of this website, that your use of the site is at your sole risk.</p>
+
+<p>Applicable law may not allow the limitation of liability set forth above, so this limitation of liability may not apply to you. If any part of this Limitation on Liability is found to be invalid or unenforceable for any reason, then the aggregate liability of Alex's Place under such circumstances for liabilities that otherwise would have been limited shall not exceed one hundred dollars ($100).</p>
+
+<h2>Enforcement of terms and conditions</h2>
+
+<p>By accessing and using the alexsribs.com website, you agree that your access to and use of this website is subject to these terms and conditions, as well as all applicable laws, as governed and interpreted pursuant to the laws of the state of North Carolina, United States of America.</p>
+
+
+Guardamos el archivo tos.html.erb.
+
+
+Modificando 'Contact Us'
+
+
+Abrimos para edición el archivo contact_us.html.erb y reemplazamos el contenido por:
+
+
+<%= content_for :header_title do %>
+
+    Contact us 
+
+<% end %>
+
+<%= content_for :header_sub_title do %>
+
+    Find us here 
+
+<% end %>
+
+<div id="maps">
+
+    <%= render 'map' %> 
+
+</div>
+
+
+Guardamos el archivo contact_us.html.erb.
+
+
+Observamos que hay una sentencia render para un partial ‘map’, el cual aún no hemos creado. Para ello ejecutamos en la consola, dentro de la carpeta raíz del proyecto, el siguiente comando:
+
+
+# touch app/views/pages/_map.html.erb
+
+
+El objetivo de este partial es contener un frame con una ubicación en Google Maps. Para ello procedemos a registrarnos como Google Developers, obtenemos un key y generamos un embedded code como un iframe para colocarlo en el partial _map.html.erb
+
+
+Aquí el enlace para el registro y obtención del key y el iframe:
+
+
+https://developers.google.com/maps/documentation/embed/
+
+
+A continuación un ejemplo del código de iframe que este proceso genera (el valor de key está en función a su cuenta de developer).
+
+
+<iframe width="600" height="450" frameborder="0" style="border:0" src="https://www.google.com/maps/embed/v1/place?q=Universidad%20Peruana%20de%20Ciencias%20Aplicadas&key=AIzaSyDSugAU9KolYXU8yjrjTTGMgF5a6w9qO6Y" allowfullscreen></iframe>
+
+
+Luego de colocar el código de iframe obtenido, guardamos el archivo _map.html.erb.
+
+
+Agregando un carrousel de imágenes a la vista index
+
+
+Abrimos para edición el archivo app/views/pages/index.html.erb y reemplazamos el código generado por las siguientes sentencias:
+
+
+<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+
+  <!-- Indicators -->
+
+  <ol class="carousel-indicators">
+
+    <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+
+    <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+
+    <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+
+  </ol>
+
+  <!-- Wrapper for slides -->
+
+  <div class="carousel-inner" role="listbox">
+
+    <div class="item active">
+
+      <%= image_tag "rest_slider1.jpg", html: { alt: "rest_slider1" } %>
+
+      <div class="carousel-caption">
+
+        <h3>Our restaurants</h3>
+
+        <p>The best for you</p>
+
+      </div>
+
+    </div>
+
+    <div class="item">
+
+      <%= image_tag "rest_slider2.jpg", html: { alt: "rest_slider2" } %>
+
+      <div class="carousel-caption">
+
+        <h3>Our service</h3>
+
+        <p>Best quality</p>
+
+      </div>
+
+    </div>
+
+    <div class="item">
+
+      <%= image_tag "rest_slider3.jpg", html: { alt: "rest_slider3" }%>
+
+      <div class="carousel-caption">
+
+        <h3>Our service</h3>
+
+        <p>Best quality</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Controls -->
+
+  <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+
+    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+
+    <span class="sr-only">Previous</span>
+
+  </a>
+
+  <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+
+    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+
+    <span class="sr-only">Next</span>
+
+  </a>
+
+</div>
+
+
+Guardamos el archivo index.html.erb.
+
+
+Debemos copiar tres imágenes de alta calidad con dimensiones de 1300x867 pixels, con los nombres rest_slider1.jpg, rest_slider2.jpg y rest_slider3.jpg. Estas imágenes ya están adjuntas con este tutorial y deben ser copiadas a la carpeta:
+
+
+app/assets/images
+
+
+Agregando un jumbotron a la vista index.html.erb
+
+
+En el archivo index.html.erb adicionamos al final las siguientes sentencias:
+
+
+<div class="jumbotron">
+
+  <h1>Welcome</h1>
+
+  <p>It is a pleasure to have you at our site</p>
+
+  <p><a class="btn btn-primary btn-lg" href=<%= pages_about_us_path %> role="button">Learn more</a></p>
+
+</div>
+
+
+Guardamos nuevamente el archivo index.html.erb.
+
+
+Ejecutando la aplicación
+
+
+Es momento de apreciar la experiencia desarrollada. En la consola ejecutamos el siguiente comando:
+
+
+# rails s -p $PORT -b $IP
+
+
+Al ingresar al URL, podrá apreciar la vista index.
